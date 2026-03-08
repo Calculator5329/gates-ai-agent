@@ -1,3 +1,4 @@
+import Markdown from "react-markdown";
 import type { ChatMessage } from "../../types/index.js";
 
 interface Props {
@@ -17,8 +18,12 @@ export function MessageBubble({ message, isStreaming }: Props) {
             : "bg-gray-800 text-gray-100 rounded-bl-sm"
         }`}
       >
-        <div className="whitespace-pre-wrap text-sm leading-relaxed">
-          {message.content}
+        <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+          {isUser ? (
+            <p>{message.content}</p>
+          ) : (
+            <Markdown>{message.content}</Markdown>
+          )}
           {isStreaming && !message.content && (
             <span className="inline-block w-2 h-4 bg-gray-400 animate-pulse ml-1" />
           )}
