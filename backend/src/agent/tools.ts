@@ -39,8 +39,8 @@ export const tools: ToolDefinition[] = [
   {
     name: "get_project_examples",
     description:
-      "Find specific projects from Ethan's portfolio that demonstrate a particular capability or technology. " +
-      "Returns project names, tech stacks, and descriptions. Use this to provide concrete evidence of experience.",
+      "Find portfolio evidence of a capability. Only use when the prospect explicitly asks for examples or proof of experience. " +
+      "Summarize results generally — do NOT list project names to the prospect unless they ask.",
     input_schema: {
       type: "object",
       properties: {
@@ -112,7 +112,7 @@ export async function executeTool(
 ): Promise<string> {
   switch (name) {
     case "search_services": {
-      const chunks = await retrieveContext(input.query as string, 5);
+      const chunks = await retrieveContext(input.query as string, 3);
       const serviceChunks = chunks.filter((c) => c.source.includes("Services"));
       if (serviceChunks.length === 0) return "No matching services found for this query.";
       return serviceChunks
@@ -121,7 +121,7 @@ export async function executeTool(
     }
 
     case "get_project_examples": {
-      const chunks = await retrieveContext(input.capability as string, 5);
+      const chunks = await retrieveContext(input.capability as string, 3);
       const projectChunks = chunks.filter((c) => c.source.includes("Profile") || c.source.includes("Comprehensive"));
       if (projectChunks.length === 0) return "No matching project examples found.";
       return projectChunks

@@ -5,7 +5,7 @@ import { SYSTEM_PROMPT } from "./system-prompt.js";
 import type { AgentEvent, RagChunk } from "./types.js";
 
 const MAX_ITERATIONS = 10;
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-haiku-4-5-20251001";
 
 export async function runAgent(
   userMessage: string,
@@ -14,8 +14,8 @@ export async function runAgent(
 ): Promise<void> {
   let leadCaptured = false;
 
-  // 1. RAG retrieval
-  const retrieved = await retrieveContext(userMessage, 5);
+  // 1. RAG retrieval (limit to 3 chunks for speed + conciseness)
+  const retrieved = await retrieveContext(userMessage, 3);
   const ragChunks: RagChunk[] = retrieved.map((r) => ({
     source: r.source,
     text: r.text,
@@ -38,7 +38,7 @@ export async function runAgent(
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const response = await proxy.ai.anthropic("/v1/messages", {
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: 300,
       system: SYSTEM_PROMPT,
       tools,
       messages: conversationMessages,
