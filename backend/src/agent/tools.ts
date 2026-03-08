@@ -1,10 +1,23 @@
 import { retrieveContext } from "../rag/retrieve.js";
+import nodemailer from "nodemailer";
 
 export interface ToolDefinition {
   name: string;
   description: string;
   input_schema: Record<string, unknown>;
 }
+
+const transporter = process.env.SMTP_HOST
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
+  : null;
 
 export const tools: ToolDefinition[] = [
   {
@@ -71,6 +84,26 @@ export const tools: ToolDefinition[] = [
       required: [],
     },
   },
+  {
+    name: "send_lead_email",
+    description:
+      "Send an email notification to Ethan with a new lead's details. " +
+      "Use this AFTER capture_lead when a prospect has shared contact information. " +
+      "This ensures Ethan gets notified immediately about interested prospects.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Prospect's name" },
+        email: { type: "string", description: "Prospect's email address" },
+        interest: { type: "string", description: "What they're interested in" },
+        conversation_summary: {
+          type: "string",
+          description: "Brief summary of the conversation so far and what the prospect is looking for",
+        },
+      },
+      required: ["interest", "conversation_summary"],
+    },
+  },
 ];
 
 export async function executeTool(
@@ -123,6 +156,41 @@ export async function executeTool(
    Assessment of your current setup to identify where AI or software improvements would have the most impact. Good starting point if unsure what you need.
 
 Note: Ethan is a full-time Software Engineer at Dovaxis and a Master's student. Contracting availability should be discussed during a consultation.`;
+    }
+
+    case "send_lead_email": {
+      const prospectName = (input.name as string) || "Not provided";
+      const prospectEmail = (input.email as string) || "Not provided";
+      const interest = input.interest as string;
+      const summary = input.conversation_summary as string;
+
+      const notifyTo = process.env.LEAD_NOTIFY_EMAIL;
+      if (!transporter || !notifyTo) {
+        console.log("\n=== LEAD EMAIL (SMTP not configured, logging instead) ===");
+        console.log(JSON.stringify({ prospectName, prospectEmail, interest, summary }, null, 2));
+        console.log("=========================================================\n");
+        return "Email notification logged (SMTP not configured). Lead details recorded.";
+      }
+
+      await transporter.sendMail({
+        from: `"GatesAI Bot" <${process.env.SMTP_USER}>`,
+        to: notifyTo,
+        subject: `New Lead: ${prospectName} — ${interest.slice(0, 60)}`,
+        html: `
+          <h2>New Lead from GatesAI Chatbot</h2>
+          <table style="border-collapse:collapse;font-family:sans-serif;">
+            <tr><td style="padding:8px;font-weight:bold;">Name</td><td style="padding:8px;">${prospectName}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Email</td><td style="padding:8px;">${prospectEmail}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Interest</td><td style="padding:8px;">${interest}</td></tr>
+          </table>
+          <h3>Conversation Summary</h3>
+          <p>${summary}</p>
+          <hr/>
+          <p style="color:#888;font-size:12px;">Sent by GatesAI chatbot at ${new Date().toISOString()}</p>
+        `,
+      });
+
+      return `Email notification sent to Ethan successfully. Lead: ${prospectName} (${prospectEmail}).`;
     }
 
     default:
