@@ -1,0 +1,13 @@
+{
+  "name": "gates-ai-agent",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "ingest": "cd backend && tsx src/rag/ingest.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
