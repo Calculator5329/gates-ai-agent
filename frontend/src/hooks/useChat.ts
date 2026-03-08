@@ -75,7 +75,8 @@ export function useChat(sessionId: string | null, onSessionId: (id: string) => v
       setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "", timestamp: new Date() }]);
 
       try {
-        const response = await fetch("/api/chat", {
+        const apiBase = import.meta.env.VITE_API_URL || "";
+        const response = await fetch(`${apiBase}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: text, sessionId }),

@@ -11,7 +11,7 @@
     "ingest": "tsx src/rag/ingest.ts"
   },
   "dependencies": {
-    "@calculator-5329/cloud-proxy": "file:../../crs-package",
+    "@calculator-5329/cloud-proxy": "^0.3.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",

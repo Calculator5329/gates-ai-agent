@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+docs/
+test-*.ts
+.dockerignore
+.gcloudignore
+.gitignore
