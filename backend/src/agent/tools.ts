@@ -164,33 +164,40 @@ Note: Ethan is a full-time Software Engineer at Dovaxis and a Master's student. 
       const interest = input.interest as string;
       const summary = input.conversation_summary as string;
 
+      console.log(`[send_lead_email] Name: ${prospectName}, Email: ${prospectEmail}, Interest: ${interest}`);
+
       const notifyTo = process.env.LEAD_NOTIFY_EMAIL;
       if (!transporter || !notifyTo) {
-        console.log("\n=== LEAD EMAIL (SMTP not configured, logging instead) ===");
-        console.log(JSON.stringify({ prospectName, prospectEmail, interest, summary }, null, 2));
-        console.log("=========================================================\n");
+        console.log("[send_lead_email] SMTP not configured — SMTP_HOST:", process.env.SMTP_HOST ?? "(unset)", "LEAD_NOTIFY_EMAIL:", notifyTo ?? "(unset)");
+        console.log("[send_lead_email] Lead details:", JSON.stringify({ prospectName, prospectEmail, interest, summary }));
         return "Email notification logged (SMTP not configured). Lead details recorded.";
       }
 
-      await transporter.sendMail({
-        from: `"GatesAI Bot" <${process.env.SMTP_USER}>`,
-        to: notifyTo,
-        subject: `New Lead: ${prospectName} — ${interest.slice(0, 60)}`,
-        html: `
-          <h2>New Lead from GatesAI Chatbot</h2>
-          <table style="border-collapse:collapse;font-family:sans-serif;">
-            <tr><td style="padding:8px;font-weight:bold;">Name</td><td style="padding:8px;">${prospectName}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Email</td><td style="padding:8px;">${prospectEmail}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Interest</td><td style="padding:8px;">${interest}</td></tr>
-          </table>
-          <h3>Conversation Summary</h3>
-          <p>${summary}</p>
-          <hr/>
-          <p style="color:#888;font-size:12px;">Sent by GatesAI chatbot at ${new Date().toISOString()}</p>
-        `,
-      });
-
-      return `Email notification sent to Ethan successfully. Lead: ${prospectName} (${prospectEmail}).`;
+      try {
+        const info = await transporter.sendMail({
+          from: `"GatesAI Bot" <${process.env.SMTP_USER}>`,
+          to: notifyTo,
+          subject: `New Lead: ${prospectName} — ${interest.slice(0, 60)}`,
+          html: `
+            <h2>New Lead from GatesAI Chatbot</h2>
+            <table style="border-collapse:collapse;font-family:sans-serif;">
+              <tr><td style="padding:8px;font-weight:bold;">Name</td><td style="padding:8px;">${prospectName}</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">Email</td><td style="padding:8px;">${prospectEmail}</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">Interest</td><td style="padding:8px;">${interest}</td></tr>
+            </table>
+            <h3>Conversation Summary</h3>
+            <p>${summary}</p>
+            <hr/>
+            <p style="color:#888;font-size:12px;">Sent by GatesAI chatbot at ${new Date().toISOString()}</p>
+          `,
+        });
+        console.log(`[send_lead_email] Email sent successfully. MessageId: ${info.messageId}`);
+        return `Email notification sent to Ethan successfully. Lead: ${prospectName} (${prospectEmail}).`;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error(`[send_lead_email] SMTP error: ${errMsg}`);
+        return `Email send failed (${errMsg}). Lead details have been logged for manual follow-up.`;
+      }
     }
 
     default:
