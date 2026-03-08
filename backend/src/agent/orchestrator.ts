@@ -38,7 +38,7 @@ export async function runAgent(
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const response = await proxy.ai.anthropic("/v1/messages", {
       model: MODEL,
-      max_tokens: 300,
+      max_tokens: 1024,
       system: SYSTEM_PROMPT,
       tools,
       messages: conversationMessages,
