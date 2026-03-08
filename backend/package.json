@@ -7,13 +7,15 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "ingest": "tsx src/rag/ingest.ts"
   },
   "dependencies": {
     "@calculator-5329/cloud-proxy": "file:../../crs-package",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mammoth": "^1.11.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
